@@ -189,11 +189,12 @@ export default function App() {
             
             <div 
               key={subscription.code} 
-              className={`rounded-xl border ${currentSubscription 
-              ? (currentSubscription.tag == subscription.tag || currentSubscription.tag == null ? 'border-violet-200' : 'border-slate-200') : null} }shadow-sm bg-white hover:shadow-md transition-shadow`}
+              className={`rounded-lg ${currentSubscription && currentSubscription.tag === subscription.tag ? 'border-2 border-violet-600' : 'border border-slate-200'} shadow-sm bg-white hover:shadow-md transition-shadow`}
               
             >
-                <h3 className="text-xl font-semibold text-slate-900 bg-violet-200 mb-1 rounded-t-lg p-6">{subscription.tag}</h3>
+              <div className='flex justify-between items-center bg-violet-200 mb-1 rounded-t-lg p-6'>
+                <h3 className="text-xl font-semibold text-slate-900 ">{subscription.tag}</h3>
+              </div> 
               <div className="mb-2 p-6">
                 <p className="text-3xl font-bold text-slate-800 mb-1">
                   {subscription.currency} {subscription.price}
@@ -202,10 +203,15 @@ export default function App() {
               </div>
             
               <div className="px-6 pb-6">
-                  <span className="text-blue-600 bg-blue-100 border border-blue-600 py-2 px-4 rounded-full font-semibold text-sm">
-                    Current Plan
-                  </span>
-                
+
+               {currentSubscription && currentSubscription.tag === subscription.tag
+                ? (
+                <span className="text-violet-600 bg-violet-100 border border-violet-600 py-2 px-4 rounded-full font-semibold text-sm">
+                  Current Plan
+                </span>
+                ) : 
+                (
+                <div className = "flex gap-2">
                   <button
                     onClick={() => upgradeSubscription(subscription.code)}
                     disabled={isLoading}
@@ -221,6 +227,9 @@ export default function App() {
                   >
                     {isLoading ? 'Downgrading...' : 'Downgrade'}
                   </button>
+                  </div>
+                )}
+
               </div>
             </div>
           );
