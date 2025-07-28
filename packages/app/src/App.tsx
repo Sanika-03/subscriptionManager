@@ -52,6 +52,60 @@ export default function App() {
       });
   };
 
+  const upgradeSubscription = (code: string) => {
+    setActionLoading(code);
+    
+    fetch('http://localhost:3000/api/subscriptions/upgrade', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ code }),
+    })
+      .then(response => response.json())
+      .then((data: UpgradeSubscriptionApiResponse) => {
+        if (data.status === 'success') {
+          setCurrentSubscription(data.subscription);
+          alert(data.message);
+        } else {
+          alert(`Upgrade failed: ${data.error}`);
+        }
+      })
+      .catch(() => {
+        alert('Upgrade failed. Please try again.');
+      })
+      .finally(() => {
+        setActionLoading(null);
+      });
+  };
+
+    const downgradeSubscription = async (code: string) => {
+    try {
+      setActionLoading(code);
+      
+      const response = await fetch('http://localhost:3000/api/subscriptions/downgrade', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code }),
+      });
+      
+      const data: DowngradeSubscriptionApiResponse = await response.json();
+      
+      if (data.status === 'success') {
+        setCurrentSubscription(data.subscription);
+        alert(data.message);
+      } else {
+        alert(`Downgrade failed: ${data.error}`);
+      }
+    } catch (err) {
+      alert('Downgrade failed. Please try again.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   useEffect(() => {
     const initializeData = async () => {
       await fetchSubscriptions();
@@ -83,19 +137,41 @@ export default function App() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {subscriptions.map((subscription) => {
+          const isLoading = actionLoading === subscription.code;
           return (
             <div 
               key={subscription.code} 
               className="rounded-xl border border-slate-200 shadow-sm bg-white hover:shadow-md transition-shadow"
             >
                 <h3 className="text-xl font-semibold text-slate-900 bg-violet-200 mb-1 rounded-t-lg p-6">{subscription.tag}</h3>
-              <div className="mb-4 p-6">
+              <div className="mb-2 p-6">
                 <p className="text-3xl font-bold text-slate-800 mb-1">
                   {subscription.currency} {subscription.price}
                 </p>
                 <p className="text-xs text-slate-500 tracking-wide">Code: {subscription.code}</p>
               </div>
             
+              <div className="px-6 pb-6">
+                  <span className="text-blue-600 bg-blue-100 border border-blue-600 py-2 px-4 rounded-full font-semibold text-sm">
+                    Current Plan
+                  </span>
+                
+                  <button
+                    onClick={() => upgradeSubscription(subscription.code)}
+                    disabled={isLoading}
+                    className="text-green-600 bg-green-100 border border-green-600 py-2 px-4 rounded-full font-semibold text-sm hover:text-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? 'Upgrading...' : 'Upgrade'}
+                  </button>
+                
+                  <button
+                    onClick={() => downgradeSubscription(subscription.code)}
+                    disabled={isLoading}
+                    className="text-red-600 bg-red-100 border border-red-600 py-2 px-4 rounded-full font-semibold text-sm hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? 'Downgrading...' : 'Downgrade'}
+                  </button>
+              </div>
             </div>
           );
         })}
