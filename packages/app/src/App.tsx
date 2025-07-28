@@ -7,6 +7,7 @@ import {
   UpgradeSubscriptionApiResponse,
   DowngradeSubscriptionApiResponse
  } from './types';
+import Loader from './Components/Loader';
 
 export default function App() {
   const [subscriptions, setSubscriptions] = useState<SubscriptionDataType[]>([]);
@@ -67,6 +68,8 @@ export default function App() {
 
   return (
     <>
+    {loading && <Loader />}
+
     <main className="px-24">
       <h1 className="text-4xl mb-8">Subscription Plan Manager</h1>
       <div className="mb-6">
