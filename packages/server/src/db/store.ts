@@ -1,14 +1,14 @@
 import { SubscriptionDataType } from "@/types";
 
 const subscriptions: SubscriptionDataType[] = [
-  { price: 0, code: "Free", tag: "Start for free", currency: "USD" },
-  { price: 99, code: "T1", tag: "Individual pack", currency: "USD" },
-  { price: 499, code: "T2", tag: "Startup pack", currency: "USD" },
+  { price: 0, code: "Free", tag: "Start for free", currency: "$" },
+  { price: 99, code: "T1", tag: "Individual pack", currency: "$" },
+  { price: 499, code: "T2", tag: "Startup pack", currency: "$" },
   {
     price: "Contact Sales",
     code: "Enterprise",
     tag: "Enterprise pack",
-    currency: "USD",
+    currency: "",
   },
 ];
 

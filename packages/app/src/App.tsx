@@ -197,7 +197,7 @@ export default function App() {
               </div> 
               <div className="mb-2 p-6">
                 <p className="text-3xl font-bold text-slate-800 mb-1">
-                  {subscription.currency} {subscription.price}
+                  {subscription.currency}{subscription.price}
                 </p>
                 <p className="text-xs text-slate-500 tracking-wide">Code: {subscription.code}</p>
               </div>
@@ -239,7 +239,7 @@ export default function App() {
       <div className="text-center py-12">
         <button
           onClick={handleRetry}
-          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          className="mt-4 bg-violet-600 text-white px-4 py-2 rounded-md hover:bg-violet-700 transition-colors"
         >
           Refresh
         </button>
