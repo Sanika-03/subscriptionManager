@@ -38,6 +38,9 @@ export default function App() {
   };
 
   const fetchCurrentSubscription = () => {
+    setLoading(true);
+    setError(null);
+
     return fetch('http://localhost:3000/api/subscriptions/current')
       .then(response => response.json())
       .then((data: GetCurrentSubscriptionApiResponse) => {
@@ -49,6 +52,9 @@ export default function App() {
       })
       .catch(err => {
         console.error('Failed to fetch current subscription:', err);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
 
@@ -128,6 +134,24 @@ export default function App() {
     fetchSubscriptions();
     fetchCurrentSubscription();
   };
+  
+  if (error) {
+    return (
+      <main className="p-4">
+        <h1 className="text-4xl mb-8">Subscription Plan Manager</h1>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+          <h2 className="text-red-800 font-semibold mb-2">Error Loading Subscriptions</h2>
+          <p className="text-red-700 mb-4">{error}</p>
+          <button
+            onClick={handleRetry}
+            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <>
