@@ -52,37 +52,45 @@ export default function App() {
       });
   };
 
-  const upgradeSubscription = (code: string) => {
-    setActionLoading(code);
-    
-    fetch('http://localhost:3000/api/subscriptions/upgrade', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ code }),
-    })
-      .then(response => response.json())
-      .then((data: UpgradeSubscriptionApiResponse) => {
-        if (data.status === 'success') {
-          setCurrentSubscription(data.subscription);
-          alert(data.message);
-        } else {
-          alert(`Upgrade failed: ${data.error}`);
-        }
-      })
-      .catch(() => {
-        alert('Upgrade failed. Please try again.');
-      })
-      .finally(() => {
-        setActionLoading(null);
+  const upgradeSubscription = async (code: string) => {
+    try {
+      setLoading(true);
+      setActionLoading(code);
+      setError(null);
+  
+      const response = await fetch('http://localhost:3000/api/subscriptions/upgrade', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code }),
       });
+  
+      const data: UpgradeSubscriptionApiResponse = await response.json();
+  
+      if (data.status === 'success') {
+        setCurrentSubscription(data.subscription);
+        console.log('Upgrade successful:', data.message);
+      } else {
+        setError(`Upgrade failed: ${data.error}`);
+        console.error('Upgrade failed:', data.error);
+      }
+    } catch (error) {
+      setError('Upgrade failed. Please try again.');
+      console.error('Upgrade failed:', error);
+    } finally {
+      setActionLoading(null);
+      setLoading(false);
+    }
   };
 
-    const downgradeSubscription = async (code: string) => {
+
+  const downgradeSubscription = async (code: string) => {
     try {
+      setLoading(true);
       setActionLoading(code);
-      
+      setError(null);
+
       const response = await fetch('http://localhost:3000/api/subscriptions/downgrade', {
         method: 'POST',
         headers: {
@@ -103,6 +111,7 @@ export default function App() {
       alert('Downgrade failed. Please try again.');
     } finally {
       setActionLoading(null);
+      setLoading(false);
     }
   };
 
@@ -125,23 +134,40 @@ export default function App() {
     {loading && <Loader />}
 
     <main className="px-24">
-      <h1 className="text-4xl mb-8">Subscription Plan Manager</h1>
+      <h1 className="text-4xl my-8">Subscription Plan Manager</h1>
       <div className="mb-6">
-        <p className="text-lg text-gray-600">
+          <h2 className="text-2xl font-semibold mb-2">Current Subscription</h2>
+
+        <div className="text-lg rounded-lg border border-violet-400">
           {currentSubscription 
-            ? `Current Plan: ${currentSubscription.tag}` 
+            ? (
+              <div className='bg-violet-100 rounded-lg '>
+              <h3 className="text-xl font-semibold text-slate-900 bg-violet-200 mb-1  rounded-t-lg p-6">{currentSubscription.tag}</h3>
+              <div className="p-6 rounded-b-lg">
+                <p className="text-3xl font-bold text-slate-800 mb-1">
+                  {currentSubscription.currency} {currentSubscription.price}
+                </p>
+                <p className="text-xs text-slate-500">Code: {currentSubscription.code}</p>
+              </div>
+              </div>
+            )
             : 'No current subscription found'
           }
-        </p>
+        </div>
       </div>
+
+      <h2 className="text-2xl font-semibold mb-2">Available Plans</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {subscriptions.map((subscription) => {
           const isLoading = actionLoading === subscription.code;
           return (
+            
             <div 
               key={subscription.code} 
-              className="rounded-xl border border-slate-200 shadow-sm bg-white hover:shadow-md transition-shadow"
+              className={`rounded-xl border ${currentSubscription 
+              ? (currentSubscription.tag == subscription.tag || currentSubscription.tag == null ? 'border-violet-200' : 'border-slate-200') : null} }shadow-sm bg-white hover:shadow-md transition-shadow`}
+              
             >
                 <h3 className="text-xl font-semibold text-slate-900 bg-violet-200 mb-1 rounded-t-lg p-6">{subscription.tag}</h3>
               <div className="mb-2 p-6">
