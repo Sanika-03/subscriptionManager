@@ -194,7 +194,7 @@ export default function App() {
             
             <div 
               key={subscription.code} 
-              className={`rounded-lg ${currentSubscription && currentSubscription.tag === subscription.tag ? 'border-2 border-violet-600' : 'border border-slate-200'} shadow-sm bg-white hover:shadow-md transition-shadow`}
+              className={`rounded-lg ${currentSubscription && currentSubscription.tag === subscription.tag ? 'border-2 border-violet-400' : 'border border-slate-200'} shadow-sm bg-white hover:shadow-md transition-shadow`}
               
             >
               <div className='flex justify-between items-center bg-violet-200 mb-1 rounded-t-lg p-6'>
@@ -211,7 +211,7 @@ export default function App() {
 
                {currentSubscription && currentSubscription.tag === subscription.tag
                 ? (
-                <span className="text-violet-600 bg-violet-100 border border-violet-600 py-2 px-4 rounded-full font-semibold text-sm">
+                <span className="text-violet-600 bg-violet-100 border border-violet-400 py-2 px-4 rounded-full font-semibold text-sm">
                   Current Plan
                 </span>
                 ) : 
