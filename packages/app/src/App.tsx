@@ -8,6 +8,7 @@ import {
   DowngradeSubscriptionApiResponse
  } from './types';
 import Loader from './Components/Loader';
+import { ToastContainer, toast } from 'react-toastify';
 
 export default function App() {
   const [subscriptions, setSubscriptions] = useState<SubscriptionDataType[]>([]);
@@ -27,10 +28,12 @@ export default function App() {
           setSubscriptions(data.data);
         } else {
           setError(data.error);
+          toast(`Failed to fetch current subscription: ${data.error}`);
         }
       })
       .catch(() => {
         setError('Failed to fetch subscriptions. Please try again.');
+        
       })
       .finally(() => {
         setLoading(false);
@@ -47,11 +50,11 @@ export default function App() {
         if (data.status === 'success') {
           setCurrentSubscription(data.data);
         } else {
-          console.error('Failed to fetch current subscription:', data.error);
+          toast(`Failed to fetch current subscription: ${data.error}`);
         }
       })
       .catch(err => {
-        console.error('Failed to fetch current subscription:', err);
+        toast(`Failed to fetch current subscription: ${err}`);
       })
       .finally(() => {
         setLoading(false);
@@ -76,14 +79,14 @@ export default function App() {
   
       if (data.status === 'success') {
         setCurrentSubscription(data.subscription);
-        console.log('Upgrade successful:', data.message);
+        toast(data.message);
       } else {
         setError(`Upgrade failed: ${data.error}`);
-        console.error('Upgrade failed:', data.error);
+        toast(`Upgrade failed: ${data.error}`);
       }
     } catch (error) {
       setError('Upgrade failed. Please try again.');
-      console.error('Upgrade failed:', error);
+      toast(`Upgrade failed:'${error}`);
     } finally {
       setActionLoading(null);
       setLoading(false);
@@ -109,12 +112,12 @@ export default function App() {
       
       if (data.status === 'success') {
         setCurrentSubscription(data.subscription);
-        alert(data.message);
+        toast(data.message);
       } else {
-        alert(`Downgrade failed: ${data.error}`);
+        toast(`Downgrade failed: ${data.error}`);
       }
     } catch (err) {
-      alert('Downgrade failed. Please try again.');
+      toast('Downgrade failed. Please try again.');
     } finally {
       setActionLoading(null);
       setLoading(false);
@@ -156,7 +159,9 @@ export default function App() {
   return (
     <>
     {loading && <Loader />}
-
+    <ToastContainer
+      autoClose={2000}
+    />
     <main className="px-24">
       <h1 className="text-4xl my-8">Subscription Plan Manager</h1>
       <div className="mb-6">
