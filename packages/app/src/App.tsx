@@ -1,185 +1,255 @@
+import { useState, useEffect } from 'react';
+import { 
+  SubscriptionDataType, 
+  // ApiFailureType,
+  GetSubscriptionsListApiResponse,
+  GetCurrentSubscriptionApiResponse,
+  UpgradeSubscriptionApiResponse,
+  DowngradeSubscriptionApiResponse
+ } from './types';
+import Loader from './Components/Loader';
+import { ToastContainer, toast } from 'react-toastify';
+
 export default function App() {
+  const [subscriptions, setSubscriptions] = useState<SubscriptionDataType[]>([]);
+  const [currentSubscription, setCurrentSubscription] = useState<SubscriptionDataType | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  const fetchSubscriptions = () => {
+    setLoading(true);
+    setError(null);
+    
+    return fetch('http://localhost:3000/api/subscriptions')
+      .then(response => response.json())
+      .then((data: GetSubscriptionsListApiResponse) => {
+        if (data.status === 'success') {
+          setSubscriptions(data.data);
+        } else {
+          setError(data.error);
+          toast(`Failed to fetch current subscription: ${data.error}`);
+        }
+      })
+      .catch(() => {
+        setError('Failed to fetch subscriptions. Please try again.');
+        
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  const fetchCurrentSubscription = () => {
+    setLoading(true);
+    setError(null);
+
+    return fetch('http://localhost:3000/api/subscriptions/current')
+      .then(response => response.json())
+      .then((data: GetCurrentSubscriptionApiResponse) => {
+        if (data.status === 'success') {
+          setCurrentSubscription(data.data);
+        } else {
+          toast(`Failed to fetch current subscription: ${data.error}`);
+        }
+      })
+      .catch(err => {
+        toast(`Failed to fetch current subscription: ${err}`);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  const upgradeSubscription = async (code: string) => {
+    try {
+      setLoading(true);
+      setActionLoading(code);
+      setError(null);
+  
+      const response = await fetch('http://localhost:3000/api/subscriptions/upgrade', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code }),
+      });
+  
+      const data: UpgradeSubscriptionApiResponse = await response.json();
+  
+      if (data.status === 'success') {
+        setCurrentSubscription(data.subscription);
+        toast(data.message);
+      } else {
+        setError(`Upgrade failed: ${data.error}`);
+        toast(`Upgrade failed: ${data.error}`);
+      }
+    } catch (error) {
+      setError('Upgrade failed. Please try again.');
+      toast(`Upgrade failed:'${error}`);
+    } finally {
+      setActionLoading(null);
+      setLoading(false);
+    }
+  };
+
+
+  const downgradeSubscription = async (code: string) => {
+    try {
+      setLoading(true);
+      setActionLoading(code);
+      setError(null);
+
+      const response = await fetch('http://localhost:3000/api/subscriptions/downgrade', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code }),
+      });
+      
+      const data: DowngradeSubscriptionApiResponse = await response.json();
+      
+      if (data.status === 'success') {
+        setCurrentSubscription(data.subscription);
+        toast(data.message);
+      } else {
+        toast(`Downgrade failed: ${data.error}`);
+      }
+    } catch (err) {
+      toast('Downgrade failed. Please try again.');
+    } finally {
+      setActionLoading(null);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const initializeData = async () => {
+      await fetchSubscriptions();
+      await fetchCurrentSubscription();
+    };
+    
+    initializeData();
+  }, []);
+
+  const handleRetry = () => {
+    fetchSubscriptions();
+    fetchCurrentSubscription();
+  };
+  
+  if (error) {
+    return (
+      <main className="p-4">
+        <h1 className="text-4xl mb-8">Subscription Plan Manager</h1>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+          <h2 className="text-red-800 font-semibold mb-2">Error Loading Subscriptions</h2>
+          <p className="text-red-700 mb-4">{error}</p>
+          <button
+            onClick={handleRetry}
+            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main className="p-4">
-      <h1 className="text-4xl">
-        Subscription Plan Functionality - FE (L1) (React.js, Typescript, API
-        Integrations)
-      </h1>
+    <>
+    {loading && <Loader />}
+    <ToastContainer
+      autoClose={2000}
+    />
+    <main className="px-24">
+      <h1 className="text-4xl my-8">Subscription Plan Manager</h1>
+      <div className="mb-6">
+          <h2 className="text-2xl font-semibold mb-2">Current Subscription</h2>
 
-      <p className="text-2xl">
-        <b>
-          Important: Start the backend server using command 'npm run
-          start:server' from project root
-        </b>
-      </p>
+        <div className="text-lg rounded-lg border border-violet-400">
+          {currentSubscription 
+            ? (
+              <div className='bg-violet-100 rounded-lg '>
+              <h3 className="text-xl font-semibold text-slate-900 bg-violet-200 mb-1  rounded-t-lg p-6">{currentSubscription.tag}</h3>
+              <div className="p-6 rounded-b-lg">
+                <p className="text-3xl font-bold text-slate-800 mb-1">
+                  {currentSubscription.currency} {currentSubscription.price}
+                </p>
+                <p className="text-xs text-slate-500">Code: {currentSubscription.code}</p>
+              </div>
+              </div>
+            )
+            : 'No current subscription found'
+          }
+        </div>
+      </div>
 
-      <ul className="pl-6">
-        <li className="list-disc">
-          For styling tailwind is already bootstrap with this project
-        </li>
-        <li className="list-disc">Read the below instructions.</li>
-        <li className="list-disc">
-          For coding you can remove the below instructions or keep these
-          instructions for reference and start coding just below these
-          instructions
-        </li>
-        <li className="list-disc">
-          API Types are in file <b>/packages/server/types.ts</b>
-        </li>
-      </ul>
+      <h2 className="text-2xl font-semibold mb-2">Available Plans</h2>
 
-      <p className="text-2xl mt-10">🚀 Objective</p>
-      <ul className="pl-6 space-y-3 text-lg max-w-screen-md mt-3">
-        <li className="list-decimal">
-          <p>
-            Fetch available subscriptions from the below API and display the
-            subscription information.{" "}
-            <b>
-              Note: Gracefully handle API failure - Button to retry fetching the
-              list again
-            </b>
-          </p>
-          <div className="border-black border p-1.5 rounded-md text-xs inline">
-            GET{" "}
-            <a
-              target="_blank"
-              href="http://localhost:3000/api/subscriptions"
-              className="underline underline-offset-4"
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {subscriptions.map((subscription) => {
+          const isLoading = actionLoading === subscription.code;
+          return (
+            
+            <div 
+              key={subscription.code} 
+              className={`rounded-lg ${currentSubscription && currentSubscription.tag === subscription.tag ? 'border-2 border-violet-400' : 'border border-slate-200'} shadow-sm bg-white hover:shadow-md transition-shadow`}
+              
             >
-              http://localhost:3000/api/subscriptions
-            </a>
-          </div>
-          <div className="py-4">
-            <span className="text-sm">Example: Render subscriptions</span>
-            <div className="grid grid-cols-3 mt-2 gap-4">
-              <div className="rounded-lg border p-4 min-h-20">
-                <span>Plan A</span>
+              <div className='flex justify-between items-center bg-violet-200 mb-1 rounded-t-lg p-6'>
+                <h3 className="text-xl font-semibold text-slate-900 ">{subscription.tag}</h3>
+              </div> 
+              <div className="mb-2 p-6">
+                <p className="text-3xl font-bold text-slate-800 mb-1">
+                  {subscription.currency}{subscription.price}
+                </p>
+                <p className="text-xs text-slate-500 tracking-wide">Code: {subscription.code}</p>
               </div>
-              <div className="rounded-lg border p-4 min-h-20">
-                <span>Plan B</span>
-              </div>
-              <div className="rounded-lg border p-4 min-h-20">
-                <span>Plan C</span>
-              </div>
-            </div>
-          </div>
-        </li>
-        <li className="list-decimal">
-          <p>
-            Fetch current subscription from the below API and display which
-            subscription plan is selected from the list received from above
-            listing API.
-          </p>
-          <div className="border-black border p-1.5 rounded-md text-xs inline">
-            GET{" "}
-            <a
-              target="_blank"
-              href="http://localhost:3000/api/subscriptions/current"
-              className="underline underline-offset-4"
-            >
-              http://localhost:3000/api/subscriptions/current
-            </a>
-          </div>
-          <div className="py-4">
-            <span className="text-sm">
-              Example: Render subscriptions along with current subscription
-            </span>
-            <div className="grid grid-cols-3 mt-2 gap-4">
-              <div className="rounded-lg border p-4 min-h-20">
-                <span>Plan A</span>
-              </div>
-              <div className="rounded-lg border p-4 min-h-20">
-                <div>
-                  <span>Plan B</span>
-                </div>
-                <span className="text-blue-600 font-bold">Current Plan</span>
-              </div>
-              <div className="rounded-lg border p-4 min-h-20">
-                <span>Plan C</span>
+            
+              <div className="px-6 pb-6">
+
+               {currentSubscription && currentSubscription.tag === subscription.tag
+                ? (
+                <span className="text-violet-600 bg-violet-100 border border-violet-400 py-2 px-4 rounded-full font-semibold text-sm">
+                  Current Plan
+                </span>
+                ) : 
+                (
+                <div className = "flex gap-2">
+                  <button
+                    onClick={() => upgradeSubscription(subscription.code)}
+                    disabled={isLoading}
+                    className="text-green-600 bg-green-100 border border-green-600 py-2 px-4 rounded-full font-semibold text-sm hover:text-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? 'Upgrading...' : 'Upgrade'}
+                  </button>
+                
+                  <button
+                    onClick={() => downgradeSubscription(subscription.code)}
+                    disabled={isLoading}
+                    className="text-red-600 bg-red-100 border border-red-600 py-2 px-4 rounded-full font-semibold text-sm hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? 'Downgrading...' : 'Downgrade'}
+                  </button>
+                  </div>
+                )}
+
               </div>
             </div>
-          </div>
-        </li>
-        <li className="list-decimal">
-          <p>
-            Upgrade current subscription plans to plan that you want to upgrade
-            to. <br />
-            <b>
-              Note: Subscriptions plan which are on the right hand side of the
-              current plan are eligible for <u>upgrade</u> and plan which are on
-              the left hand side of the current plan are eligible for{" "}
-              <u>downgrade</u>. Subscription listing API always returns plan
-              from priority low to high
-            </b>
-            <br />
-            <b>Note: Updates the UI in response to changes</b>
-          </p>
-          <div className="flex items-start space-x-2 py-6">
-            <span className="text-sm">Upgrade API: </span>
-            <div className="flex flex-col">
-              <p className="border-black border p-1.5 rounded-md text-xs inline">
-                POST{" "}
-                <a
-                  target="_blank"
-                  href="http://localhost:3000/api/subscriptions/upgrade"
-                  className="underline underline-offset-4"
-                >
-                  http://localhost:3000/api/subscriptions/upgrade
-                </a>
-              </p>
-              <span className="text-sm mt-3">Body</span>
-              <code className="rounded-lg mt-1 inline text-xs overflow-x-scroll p-2 w-full text-white bg-zinc-950">
-                <pre>{JSON.stringify({ code: "Plan code" }, null, 2)}</pre>
-              </code>
-            </div>
-          </div>
-          <div className="flex items-start space-x-2 py-6">
-            <span className="text-sm">Downgrade API: </span>
-            <div className="flex flex-col">
-              <p className="border-black border p-1.5 rounded-md text-xs inline">
-                POST{" "}
-                <a
-                  target="_blank"
-                  href="http://localhost:3000/api/subscriptions/downgrade"
-                  className="underline underline-offset-4"
-                >
-                  http://localhost:3000/api/subscriptions/downgrade
-                </a>
-              </p>
-              <span className="text-sm mt-3">Body</span>
-              <code className="rounded-lg mt-1 inline text-xs overflow-x-scroll p-2 w-full text-white bg-zinc-950">
-                <pre>{JSON.stringify({ code: "Plan code" }, null, 2)}</pre>
-              </code>
-            </div>
-          </div>
-          <div className="py-4">
-            <span className="text-sm">
-              Example: Render respective Upgrade and Downgrade buttons along
-              with current subscription
-            </span>
-            <div className="grid grid-cols-3 mt-2 gap-4">
-              <div className="rounded-lg border p-4 min-h-20">
-                <div>
-                  <span>Plan A</span>
-                </div>
-                <span className="text-red-600 font-bold">Downgrade</span>
-              </div>
-              <div className="rounded-lg border p-4 min-h-20">
-                <div>
-                  <span>Plan B</span>
-                </div>
-                <span className="text-blue-600 font-bold">Current Plan</span>
-              </div>
-              <div className="rounded-lg border p-4 min-h-20">
-                <div>
-                  <span>Plan C</span>
-                </div>
-                <span className="text-green-600 font-bold">Upgrade</span>
-              </div>
-            </div>
-          </div>
-        </li>
-      </ul>
+          );
+        })}
+      </div>
+
+      <div className="text-center py-12">
+        <button
+          onClick={handleRetry}
+          className="mt-4 bg-violet-600 text-white px-4 py-2 rounded-md hover:bg-violet-700 transition-colors"
+        >
+          Refresh
+        </button>
+      </div>
     </main>
+    </>
   );
 }
