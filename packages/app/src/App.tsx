@@ -207,7 +207,7 @@ export default function App() {
                 <p className="text-xs text-slate-500 tracking-wide">Code: {subscription.code}</p>
               </div>
             
-              <div className="px-6 pb-6">
+              <div className="px-6 pb-6 flex gap-2">
 
                {currentSubscription && currentSubscription.tag === subscription.tag
                 ? (
